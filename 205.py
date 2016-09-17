@@ -5,29 +5,27 @@
 #
 # What is the probability that Pyramidal Pete beats Cubic Colin? Give your answer rounded to seven decimal places in the form 0.abcdefg
 
-# PeterScoreProb[i] contains the probability the sum of Peter's rolls is i
-PeterScoreProb = [0]*37
-ColinScoreProb = [0]*37
-
+# Returns an array with the probabilities of rolling totals given dice number of dice with faces number of faces
 # Compute the probability of getting scores for rolling i die by first computing the probability of getting scores for rolling i-1 die
-# With 0 die the probability Peter rolls a total of 0 is 1
-PeterScoreProb[0] = 1
-# Start computing probabilities for rolling 1 die and work up to 9
-for dice in range(1,10):
-    # Start updating scores working from top to bottom so we don't overwrite a score we need in the future
-    for score in range(4*dice,-1,-1):
-        # The probability for rolling a sum of k with i dice is 1/4 * the sum of the probability of rolling k-1, k-2, k-3, and k-4 with i-1 dice
-        PeterScoreProb[score] = 0
-        for previous in range(max(0, score - 4), score):
-            PeterScoreProb[score] += PeterScoreProb[previous]/4
+def RollSumProbabilities(dice,faces):
+    # rollSumProbabilities[k] is the probability that a roll gives a sum of k
+    rollSumProbabilities = [0]*(dice*faces + 1)
+    # With 0 die the probability Peter rolls a total of 0 is 1
+    rollSumProbabilities[0] = 1
+    # Start computing probabilities for rolling 1 die and work up to dice
+    for d in range(dice):
+        # Start updating scores working from top to bottom so we don't overwrite a score we need in the future
+        for score in range(faces*(d+1),-1,-1):
+            # The probability for rolling a sum of k with i dice is 1/faces * the sum of the probability of rolling k-1, k-2, ..., k-faces with i-1 dice
+            rollSumProbabilities[score] = sum(rollSumProbabilities[max(0, score-faces):score])/faces
+    # Return the result
+    return rollSumProbabilities
 
+# Peter rolls 9 dice with 4 sides
+PeterScoreProb = RollSumProbabilities(9,4)
+# Colin rolls 6 dice with 6 sides
+ColinScoreProb = RollSumProbabilities(6,6)
 
-ColinScoreProb[0] = 1
-for dice in range(1,7):
-    for score in range(6*dice,-1,-1):
-        ColinScoreProb[score] = 0
-        for previous in range(max(0, score - 6), score):
-            ColinScoreProb[score] += ColinScoreProb[previous]/6
 
 # PeterTailSum[i] is the probability that Peter has a score higher than i
 PeterTailSum = [0]*37
@@ -36,9 +34,7 @@ for score in range(35, -1,-1):
     PeterTailSum[score] = PeterTailSum[score+1] + PeterScoreProb[score+1]
 
 # Peter's win probability is the sum of the probability Colin rolls a score times the probability Peter rolls greater than that score
-PeterWinProb = 0
-for score in range(0,37):
-    PeterWinProb += ColinScoreProb[score]*PeterTailSum[score]
+PeterWinProb = sum([ColinScoreProb[i]*PeterTailSum[i] for i in range(37)])
 
 # Print result
 print(PeterWinProb)
